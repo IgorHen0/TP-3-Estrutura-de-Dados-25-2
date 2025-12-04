@@ -17,7 +17,7 @@ all: $(EXEC)
 # Cria o executável a partir dos objetos
 $(EXEC): $(OBJ)
 	mkdir -p $(BINDIR)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ -lm
 
 # Compila cada arquivo .c para .o
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
