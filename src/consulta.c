@@ -74,26 +74,15 @@ void quick_sort_resultados(ResultadoBusca *arr, int low, int high) {
     }
 }
 
-void processar_consultas(CadastroLogradouros *cad, NoPalavra *raiz, const char *caminhoArquivo) {
-    FILE *f = fopen(caminhoArquivo, "r");
-    if (!f) return;
+void processar_consultas(CadastroLogradouros *cad, NoPalavra *raiz, FILE *entrada) {
+    if (!entrada) return;
 
     char linha[1024];
 
-    // Lê a primeira linha para saber quantos endereços tem (N)
-    if (!fgets(linha, sizeof(linha), f)) { fclose(f); return; }
-    int qtdEnderecos = atoi(linha);
-
-    // Pula N linhas
-    for (int i = 0; i < qtdEnderecos; i++) {
-        if (!fgets(linha, sizeof(linha), f)) break;
-    }
-
-    // Lê o Cabeçalho das Consultas: M (num consultas) e R (max resultados)
-    if (!fgets(linha, sizeof(linha), f)) { fclose(f); return; }
+    // O arquivo já deve estar posicionado na linha "M R" (após ler os endereços)
+    if (!fgets(linha, sizeof(linha), entrada)) return;
     
     int numConsultas = 0, maxResultados = 0;
-    // Parsing simples da linha "M R"
     char *l = trim(linha);
     int countTokens = 0;
     char **tokensHeader = split(l, " ", &countTokens);
@@ -103,13 +92,12 @@ void processar_consultas(CadastroLogradouros *cad, NoPalavra *raiz, const char *
     }
     free_split(tokensHeader, countTokens);
 
-    printf("%d\n", numConsultas); // Imprime M conforme especificação de saída
+    printf("%d\n", numConsultas);
 
-    // Processa cada Consulta
+    // Loop de consultas
     for (int k = 0; k < numConsultas; k++) {
-        if (!fgets(linha, sizeof(linha), f)) break;
+        if (!fgets(linha, sizeof(linha), entrada)) break;
 
-        // Formato: IdConsulta; Termos... ; LatOrigem; LongOrigem
         char *limpa = trim(linha);
         int qtdParts = 0;
         char **parts = split(limpa, ";", &qtdParts);
@@ -120,48 +108,36 @@ void processar_consultas(CadastroLogradouros *cad, NoPalavra *raiz, const char *
             double latOrigem = atof(parts[2]);
             double longOrigem = atof(parts[3]);
 
-            // Separa termos da busca
             int qtdTermos = 0;
             char **palavras = split(termosBusca, " ", &qtdTermos);
-
-            // Buscar e Interseção
             IntVector *resultadoIDs = NULL;
 
             for (int w = 0; w < qtdTermos; w++) {
                 NoPalavra *no = buscar_palavra(raiz, palavras[w]);
-                
                 if (no == NULL) {
-                    // Se uma palavra não existe, a interseção é vazia.
                     if (resultadoIDs) vector_free(resultadoIDs);
-                    resultadoIDs = vector_create(0); // Vetor vazio
+                    resultadoIDs = vector_create(0);
                     break;
                 }
-
                 if (w == 0) {
-                    // Primeira palavra: o resultado é a lista dela inteira (cópia)
                     resultadoIDs = vector_create(no->ids->size);
                     for(size_t x=0; x < no->ids->size; x++) 
                         vector_push_back(resultadoIDs, no->ids->data[x]);
                 } else {
-                    // Palavras seguintes: interseção com o atual
                     IntVector *temp = interseccao_vetores(resultadoIDs, no->ids);
-                    vector_free(resultadoIDs); // Libera o anterior
-                    resultadoIDs = temp;       // Atualiza
+                    vector_free(resultadoIDs);
+                    resultadoIDs = temp;
                 }
-
-                if (resultadoIDs->size == 0) break; // Interseção vazia, pode parar
+                if (resultadoIDs->size == 0) break;
             }
 
-            // Recuperar Logradouros e Calcular Distâncias
             ResultadoBusca *listaFinal = (ResultadoBusca*) malloc(resultadoIDs->size * sizeof(ResultadoBusca));
             int countFinal = 0;
 
             for (size_t i = 0; i < resultadoIDs->size; i++) {
                 int idBusca = resultadoIDs->data[i];
-
+                // Reimplementando busca linear rápida na hash
                 Logradouro *encontrado = NULL;
-                
-                // Tenta acesso rápido via Hash (reimplementando lógica de busca rápida)
                 size_t idxHash = (unsigned long)idBusca % cad->tamHash;
                 size_t idxOriginal = idxHash;
                 while (cad->tabelaHash[idxHash] != -1) {
@@ -181,28 +157,21 @@ void processar_consultas(CadastroLogradouros *cad, NoPalavra *raiz, const char *
                 }
             }
 
-            // Ordenar por Distância
             if (countFinal > 1) {
                 quick_sort_resultados(listaFinal, 0, countFinal - 1);
             }
 
-            // Imprimir Saída (IdConsulta; NumRespostas)
             int numParaImprimir = countFinal < maxResultados ? countFinal : maxResultados;
             printf("%s;%d\n", idConsulta, numParaImprimir);
 
             for (int i = 0; i < numParaImprimir; i++) {
-                // Formato: IdLog; Nome
                 printf("%d;%s\n", listaFinal[i].log->idLog, listaFinal[i].log->nome);
             }
 
-            // Limpeza da consulta atual
             free(listaFinal);
             if(resultadoIDs) vector_free(resultadoIDs);
             free_split(palavras, qtdTermos);
         }
-        
         free_split(parts, qtdParts);
     }
-
-    fclose(f);
 }

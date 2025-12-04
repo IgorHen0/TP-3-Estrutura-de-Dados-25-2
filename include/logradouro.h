@@ -14,21 +14,19 @@ typedef struct {
     double longMedia;
 } Logradouro;
 
-// Estrutura para gerenciar a coleção de logradouros (usando Hash Table para agilidade)
+// Estrutura para gerenciar a coleção de logradouros
 typedef struct {
-    Logradouro **vetor;
-    size_t tamanho;
-    size_t capacidade;
-    
-    // Campos internos para a Tabela Hash (mapeia IdLog -> Índice no vetor)
-    int *tabelaHash;
-    size_t tamHash;
+    Logradouro **vetor;      
+    size_t tamanho;          
+    size_t capacidade;       
+    int *tabelaHash;         
+    size_t tamHash;          
 } CadastroLogradouros;
 
 CadastroLogradouros* criar_cadastro(size_t tamEstimado);
 void registrar_logradouro(CadastroLogradouros *cad, int idLog, char *nome, double lat, double lon);
 void calcular_centroides(CadastroLogradouros *cad);
 void destruir_cadastro(CadastroLogradouros *cad);
-int ler_arquivo_entrada(CadastroLogradouros *cad, const char *caminhoArquivo);
+int ler_arquivo_entrada(CadastroLogradouros *cad, FILE *entrada);
 
 #endif

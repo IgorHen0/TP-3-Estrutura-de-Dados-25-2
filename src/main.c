@@ -25,17 +25,12 @@ void criar_indice_palavras(CadastroLogradouros *cad, NoPalavra **raiz) {
     }
 }
 
-int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("Erro: Informe o arquivo de entrada.\n");
-        return 1;
-    }
-
-    //Leitura e Agregação
+int main() {
+    // Inicializa Cadastro
     CadastroLogradouros *cad = criar_cadastro(10000); 
     
-    if (!ler_arquivo_entrada(cad, argv[1])) {
-        fprintf(stderr, "Falha ao ler arquivo.\n");
+    // A função lê N endereços e para.
+    if (!ler_arquivo_entrada(cad, stdin)) {
         return 1;
     }
     calcular_centroides(cad);
@@ -44,8 +39,8 @@ int main(int argc, char *argv[]) {
     NoPalavra *raiz = NULL;
     criar_indice_palavras(cad, &raiz);
 
-    // Processamento de Consultas
-    processar_consultas(cad, raiz, argv[1]);
+    // Processamento de Consultas via STDIN
+    processar_consultas(cad, raiz, stdin);
 
     // Limpeza
     liberar_arvore(raiz);
