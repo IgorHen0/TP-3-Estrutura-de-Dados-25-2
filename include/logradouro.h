@@ -24,6 +24,7 @@ typedef struct {
 } CadastroLogradouros;
 
 CadastroLogradouros* criar_cadastro(size_t tamEstimado);
+void redimensionar_hash(CadastroLogradouros *cad);
 void registrar_logradouro(CadastroLogradouros *cad, int idLog, char *nome, double lat, double lon);
 void calcular_centroides(CadastroLogradouros *cad);
 void destruir_cadastro(CadastroLogradouros *cad);
