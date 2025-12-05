@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 #include "../include/logradouro.h"
 #include "../include/palavra.h"
 #include "../include/utils.h"
@@ -26,21 +27,30 @@ void criar_indice_palavras(CadastroLogradouros *cad, NoPalavra **raiz) {
 }
 
 int main() {
-    // Inicializa Cadastro
-    CadastroLogradouros *cad = criar_cadastro(10000); 
     
-    // A função lê N endereços e para.
-    if (!ler_arquivo_entrada(cad, stdin)) {
-        return 1;
-    }
+    // MEDIR TEMPO DE CARGA (Leitura + Hash + Centróides + Indexação)
+    clock_t inicio_carga = clock();
+    
+    CadastroLogradouros *cad = criar_cadastro(10000); 
+    if (!ler_arquivo_entrada(cad, stdin)) return 1;
     calcular_centroides(cad);
-
-    // Indexação
     NoPalavra *raiz = NULL;
-    criar_indice_palavras(cad, &raiz);
+    criar_indice_palavras(cad, &raiz); // Indexação
+    
+    clock_t fim_carga = clock();
+    double tempo_carga = (double)(fim_carga - inicio_carga) / CLOCKS_PER_SEC;
 
-    // Processamento de Consultas via STDIN
+    // MEDIR TEMPO DE CONSULTA
+    clock_t inicio_consulta = clock();
+    
     processar_consultas(cad, raiz, stdin);
+    
+    clock_t fim_consulta = clock();
+    double tempo_consulta = (double)(fim_consulta - inicio_consulta) / CLOCKS_PER_SEC;
+
+    // Imprimir para stderr para não sujar a saída padrão do VPL
+    fprintf(stderr, "Tempo Carga: %f s\n", tempo_carga);
+    fprintf(stderr, "Tempo Consulta: %f s\n", tempo_consulta);
 
     // Limpeza
     liberar_arvore(raiz);

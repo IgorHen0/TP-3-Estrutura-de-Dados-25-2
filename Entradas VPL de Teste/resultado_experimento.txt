@@ -1,0 +1,11 @@
+input_2
+Tempo Carga: 0.001151 s
+Tempo Consulta: 0.000242 s
+
+input_3
+Tempo Carga: 0.000526 s
+Tempo Consulta: 0.000128 s
+
+input_4
+Tempo Carga: 0.001541 s
+Tempo Consulta: 0.000151 s
